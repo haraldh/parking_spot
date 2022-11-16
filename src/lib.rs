@@ -183,7 +183,7 @@ impl ParkingSpot {
         num_unpark
     }
 
-    /// Unpark `n` threads maximal that are parked with the given key.
+    /// Unpark at most `n` threads that are parked with the given key.
     ///
     /// Returns the number of threads that were actually unparked.
     pub fn unpark(&self, key: usize, n: usize) -> usize {
