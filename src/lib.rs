@@ -68,7 +68,7 @@ struct Spot {
 }
 
 /// The thread global `ParkingSpot`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ParkingSpot {
     inner: Mutex<BTreeMap<usize, Spot>>,
 }
