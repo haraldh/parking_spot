@@ -100,7 +100,10 @@ impl ParkingSpot {
     ) -> ParkResult {
         let timeout = timeout.map(|timeout| Instant::now() + timeout);
 
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self
+            .inner
+            .lock()
+            .expect("failed to lock inner parking table");
 
         // check validation with lock held
         if !validate() {
@@ -110,7 +113,10 @@ impl ParkingSpot {
         // clone the condvar, so we can move the lock
         let cvar = {
             let spot = inner.entry(key).or_insert_with(Spot::default);
-            spot.num_parked = spot.num_parked.checked_add(1).unwrap();
+            spot.num_parked = spot
+                .num_parked
+                .checked_add(1)
+                .expect("parking spot number overflow");
             spot.cvar.clone()
         };
 
@@ -121,28 +127,36 @@ impl ParkingSpot {
                     true
                 } else {
                     let dur = timeout - now;
-                    let (lock, result) = cvar.wait_timeout(inner, dur).unwrap();
+                    let (lock, result) = cvar
+                        .wait_timeout(inner, dur)
+                        .expect("failed to wait for condition");
                     inner = lock;
                     result.timed_out()
                 }
             } else {
-                inner = cvar.wait(inner).unwrap();
+                inner = cvar.wait(inner).expect("failed to wait for condition");
                 false
             };
 
-            let spot = inner.get_mut(&key).unwrap();
+            let spot = inner.get_mut(&key).expect("failed to get spot");
 
             if !timed_out && spot.to_unpark == 0 {
                 continue;
             }
 
-            spot.to_unpark = spot.to_unpark.checked_sub(1).unwrap();
+            spot.to_unpark = spot
+                .to_unpark
+                .checked_sub(1)
+                .expect("corrupted parking spot state");
 
             if spot.num_parked == 1 {
                 assert_eq!(spot.to_unpark, 0);
                 inner.remove(&key);
             } else {
-                spot.num_parked = spot.num_parked.checked_sub(1).unwrap();
+                spot.num_parked = spot
+                    .num_parked
+                    .checked_sub(1)
+                    .expect("corrupted parking spot state");
             }
 
             if timed_out {
@@ -185,7 +199,10 @@ impl ParkingSpot {
     }
 
     fn with_lot<F: FnMut(&mut Spot)>(&self, key: usize, mut f: F) {
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self
+            .inner
+            .lock()
+            .expect("failed to lock inner parking table");
         if let Some(spot) = inner.get_mut(&key) {
             f(spot);
         }
