@@ -151,7 +151,9 @@ impl ParkingSpot {
 
             if spot.num_parked == 1 {
                 assert_eq!(spot.to_unpark, 0);
-                inner.remove(&key);
+                inner
+                    .remove(&key)
+                    .expect("failed to remove spot from inner parking table");
             } else {
                 spot.num_parked = spot
                     .num_parked
