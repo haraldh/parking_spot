@@ -68,16 +68,9 @@ struct Spot {
 }
 
 /// The thread global `ParkingSpot`.
+#[derive(Default)]
 pub struct ParkingSpot {
     inner: Mutex<BTreeMap<usize, Spot>>,
-}
-
-impl Default for ParkingSpot {
-    fn default() -> Self {
-        ParkingSpot {
-            inner: Mutex::new(BTreeMap::new()),
-        }
-    }
 }
 
 impl ParkingSpot {
