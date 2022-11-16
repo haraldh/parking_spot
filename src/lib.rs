@@ -422,7 +422,7 @@ mod tests {
                     while self.num_awake.load(Ordering::SeqCst)
                         != num_awake_before_unpark + num_unparked
                     {
-                        thread::yield_now()
+                        thread::yield_now();
                     }
 
                     num_threads_left = num_threads_left.checked_sub(num_unparked).unwrap();
@@ -463,14 +463,14 @@ mod tests {
                         match PARKING_SPOT.unpark(self.semaphore_addr(), 1) {
                             1 => break,
                             0 => (),
-                            i => panic!("Should not wake up {} threads", i),
+                            i => panic!("Should not wake up {i} threads"),
                         }
                     }
                 }
             }
 
             fn semaphore_addr(&self) -> usize {
-                &self.semaphore as *const _ as usize
+                addr_of!(self.semaphore) as _
             }
         }
     }
